@@ -21,7 +21,7 @@ app.get("/users", (req: Request, res: Response) => {
 });
 
 app.get("/products", (req: Request, res: Response) => {
-    
+
     const nameToFind = req.query.name as string
 
     if (nameToFind) {
