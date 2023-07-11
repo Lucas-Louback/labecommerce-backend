@@ -21,7 +21,7 @@ app.get("/users", (req: Request, res: Response) => {
 });
 
 app.get("/products", (req: Request, res: Response) => {
-    
+
     const nameToFind = req.query.name as string
 
     if (nameToFind) {
@@ -69,6 +69,52 @@ app.post('/products', (req: Request, res: Response) => {
     products.push(newProduct)
     res.status(201).send("Cadastro realizado com sucesso")
 })
+
+app.delete('/users/:id', (req: Request, res: Response) => {
+    const idToDelete = req.params.id
+    const userIndex = users.findIndex((user) => user.id === idToDelete)
+
+    if (userIndex >= 0) {
+        users.splice(userIndex, 1)
+    }
+    res.status(200).send("Item deletado com Sucesso")
+})
+
+app.delete('/products/:id', (req: Request, res: Response) => {
+    const productIdToDelete = req.params.id
+    const productIndex = products.findIndex((product) => product.id === productIdToDelete)
+
+    if (productIndex >= 0) {
+        products.splice(productIndex, 1)
+    }
+    res.status(200).send("Item deletado com Sucesso")
+})
+
+app.put('/products/:id', (req: Request, res: Response) => {
+    const idToEdit = req.params.id
+
+    const newId = req.body.id as string | undefined
+    const newName = req.body.name as string | undefined
+    const newPrice = req.body.price as number | undefined
+    const newDescription = req.body.description as string | undefined
+    const newImageUrl = req.body.imageUrl as string | undefined
+
+    const product = products.find((product) => product.id === idToEdit)
+
+    if (product) {
+        product.id = newId || product.id
+        product.name = newName || product.name
+        product.price = newPrice || product.price
+        product.description = newDescription || product.description
+        product.imageUrl = newImageUrl || product.imageUrl
+    }
+    res.status(200).send("Atualização realizada com sucesso")
+})
+
+
+
+
+
 
 
 console.log("foi transpilado e executado com sucesso")
