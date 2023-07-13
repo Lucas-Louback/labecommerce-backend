@@ -9,11 +9,14 @@ CREATE TABLE
         created_at TEXT NOT NULL
     );
 
-SELECT * FROM users;
-
-SELECT name, email FROM users;
-
-PRAGMA table_info('users');
+CREATE TABLE
+    products (
+        id TEXT PRIMARY KEY UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        price REAL NOT null,
+        description TEXT NOT NULL,
+        image_url TEXT NOT NULL
+    );
 
 INSERT INTO
     users (
@@ -28,41 +31,20 @@ VALUES (
         'Astrodev',
         'astrodev@email.com',
         'astrodev123',
-        '13/07/2023'
+        datetime('now')
     ), (
         'u002',
         'labenu',
         'labenu@email.com',
         'labenu123',
-        '13/07/2023'
+        datetime('now')
     ), (
         'u003',
         'Astrodev',
         'astr@email.com',
         'astrodev1234',
-        '13/07/2023'
+        datetime('now')
     );
-
-UPDATE users SET email = 'astro_dev@email.com' WHERE id = 'u001';
-
-DELETE FROM users WHERE id = 'u001';
-
-DROP TABLE users;
-
-CREATE TABLE
-    products (
-        id TEXT PRIMARY KEY UNIQUE NOT NULL,
-        name TEXT NOT NULL,
-        price REAL NOT null,
-        description TEXT NOT NULL,
-        image_url TEXT NOT NULL
-    );
-
-SELECT * FROM products;
-
-SELECT name, price FROM products;
-
-PRAGMA table_info('products');
 
 INSERT INTO
     products (
@@ -74,13 +56,13 @@ INSERT INTO
     )
 VALUES (
         'prod001',
-        'mouse',
+        'mouse gamer',
         400,
         'mouse bolado',
         'google'
     ), (
         'prod002',
-        'teclado',
+        'teclado gamer',
         600,
         'teclado bolado',
         'google'
@@ -104,10 +86,92 @@ VALUES (
         'google'
     );
 
-UPDATE products SET name = 'mouse gamer' WHERE id = 'prod001';
+-- Usuários -- -- Usuários -- -- Usuários -- -- Usuários -- -- Usuários -- -- Usuários ---- Usuários ---- Usuários --
+
+--Get all Users
+
+SELECT id, name FROM users;
+
+PRAGMA table_info('users');
+
+-- alterar informações a partir da ID
+
+UPDATE users SET email = 'astro_dev@email.com' WHERE id = 'u001';
+
+-- deletar usuário a partir da id
+
+DELETE FROM users WHERE id = 'u001';
+
+-- deletar tabela de usuarios
+
+DROP TABLE users;
+
+-- adicionar usuario
+
+INSERT INTO
+    users (
+        id,
+        name,
+        email,
+        password,
+        created_at
+    )
+VALUES (
+        'u005',
+        'Lucas',
+        'lucas2@email',
+        'lucas123',
+        datetime('now')
+    );
+
+-- Produtos -- -- Produtos -- -- Produtos -- -- Produtos -- -- Produtos -- -- Produtos -- -- Produtos -- -- Produtos --
+
+-- Get all Products
+
+SELECT * FROM products;
+
+-- exibir nome e preço da tabela de produtos
+
+SELECT name, price FROM products;
+
+-- especificações da tabela de produtos
+
+PRAGMA table_info('products');
+
+-- alterar informações a partir da ID
+
+UPDATE products SET name = 'mouse gamer pro', price = 500, description = "mouse sinistro", image_url = "google.com" WHERE id = 'prod001';
+
+-- deletar produto a partir da id
 
 DELETE FROM products WHERE id = 'prod001';
 
+-- deletar tabela de produtos
+
 DROP TABLE products;
+
+--Get products that includes "gamer"
+
+SELECT * FROM products where name like '%gamer%';
+
+-- adicionar produto
+
+INSERT INTO
+    products (
+        id,
+        name,
+        price,
+        description,
+        image_url
+    )
+VALUES (
+        'prod006',
+        'fone gamer',
+        400,
+        'mouse bolado',
+        'google'
+    );
+
+--exibir as duas tabelas
 
 SELECT * FROM products UNION SELECT * FROM users;
