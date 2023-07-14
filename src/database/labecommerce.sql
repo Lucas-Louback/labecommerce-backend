@@ -49,7 +49,7 @@ PRAGMA table_info('users');
 
 -- alterar informações a partir da ID
 
-UPDATE users SET email = 'astro_dev@email.com' WHERE id = 'u001';
+UPDATE users SET email = 'astrodeveloper@email.com' WHERE id = 'u001';
 
 -- deletar usuário a partir da id
 
@@ -154,7 +154,7 @@ WHERE id = 'prod001';
 
 -- deletar produto a partir da id
 
-DELETE FROM products WHERE id = 'prod001';
+DELETE FROM products WHERE id = 'prod006';
 
 -- deletar tabela de produtos
 
@@ -194,7 +194,7 @@ CREATE TABLE
         buyer TEXT NOT NULL,
         total_price REAL NOT NULL,
         created_at TEXT NOT NULL,
-        FOREIGN KEY (buyer) REFERENCES users(id)
+        FOREIGN KEY (buyer) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
 -- inserir dados na tabela purchases
@@ -216,6 +216,11 @@ VALUES (
         'u002',
         1500,
         datetime('now')
+    ), (
+        'purch003',
+        'u003',
+        2500,
+        datetime('now')
     );
 
 -- get all purchases
@@ -232,6 +237,8 @@ SET
     created_at = datetime('now')
 WHERE id = 'purch001';
 
+-- exibir tabela
+
 SELECT
     purchases.id,
     purchases.buyer,
@@ -241,3 +248,75 @@ SELECT
     purchases.created_at
 FROM purchases
     INNER JOIN users ON purchases.buyer = users.id;
+
+-- novo puurchase
+
+INSERT INTO
+    purchases (
+        id,
+        buyer,
+        total_price,
+        created_at
+    )
+VALUES (
+        'purch003',
+        'u003',
+        2500,
+        datetime('now')
+    );
+
+DROP TABLE purchases;
+
+-- relações -- -- relações -- -- relações -- -- relações -- -- relações -- -- relações -- -- relações -- -- relações -- -- relações
+
+--Criar tabela relacional
+
+CREATE TABLE
+    purchases_products (
+        purchases_id TEXT NOT NULL,
+        products_id TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        FOREIGN KEY (purchases_id) REFERENCES purchases(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (products_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+    );
+
+--inserir dados na tabela relacional
+
+INSERT INTO
+    purchases_products (
+        purchases_id,
+        products_id,
+        quantity
+    )
+VALUES ('purch001', 'prod001', 3), ('purch002', 'prod002', 5);
+
+INSERT INTO
+    purchases_products (
+        purchases_id,
+        products_id,
+        quantity
+    )
+VALUES ('purch003', 'prod003', 3);
+
+-- exibir tabela
+
+SELECT * FROM purchases_products;
+
+SELECT
+    purchases.id AS purchaseID,
+    products.id AS productId,
+    quantity,
+    purchases.buyer,
+    purchases.total_price,
+    purchases.created_at,
+    products.name,
+    products.price,
+    products.description,
+    products.image_url
+FROM purchases_products
+    INNER JOIN purchases ON purchases_products.purchases_id = purchases.id
+    INNER JOIN products ON purchases_products.products_id = products.id;
+
+-- deletar a tabela
+
+DROP TABLE purchases_products;
