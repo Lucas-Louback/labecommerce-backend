@@ -320,3 +320,4 @@ FROM purchases_products
 -- deletar a tabela
 
 DROP TABLE purchases_products;
+
