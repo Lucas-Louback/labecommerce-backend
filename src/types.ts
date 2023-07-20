@@ -13,3 +13,11 @@ export type TProducts = {
     description: string;
     imageUrl: string;
 }
+
+export type TProducts2 = {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+    image_url: string;
+}
