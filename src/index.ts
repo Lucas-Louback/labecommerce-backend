@@ -1,4 +1,3 @@
-import { users, products, createNewUser, getAllUsers, createNewProduct, getAllProducts, searchProductsByName } from "./database";
 import express, { Request, Response } from 'express';
 import { TUser, TProducts, TProducts2 } from "./types";
 import cors from 'cors';
@@ -52,7 +51,7 @@ app.post("/create-table-users", async (req: Request, res: Response) => {
     }
 });
 
-app.post("/users", async (req: Request, res: Response) => {
+app.post("/users", async (req: Request, res: Response) => { //refatorado e funcionando
     try {
         const id = req.body.id
         const name = req.body.name
@@ -62,10 +61,14 @@ app.post("/users", async (req: Request, res: Response) => {
             res.status(400)
             throw new Error("Dados inválidos")
         }
-        await db.raw(`
-	        INSERT INTO users (id, name, email, password, created_at)
-	        VALUES ("${id}", "${name}", "${email}", "${password}", "${new Date().toISOString()}");
-        `)
+        const newUser = {
+            id: id,
+            name: name,
+            email: email,
+            password: password,
+            created_at: new Date().toISOString()
+        }
+        await db("users").insert(newUser)
         res.status(200).send({ message: "Cadastro realizado com sucesso!" })
     }
     catch (error: any) {
@@ -73,10 +76,31 @@ app.post("/users", async (req: Request, res: Response) => {
     }
 });
 
-app.get("/users", async (req: Request, res: Response) => {
+app.delete("/users/:id", async (req: Request, res: Response) => {
     try {
-        const result: Array<TUser> = await db.raw(`
-        SELECT * FROM users;`)
+        const idToDelete = req.params.id
+        if (idToDelete[0] !== "u") {
+            res.status(400)
+            throw new Error("O id deve cmeçar com 'u'")
+        }
+        const [userIdToDelete] = await db("users").where({ id: idToDelete })
+        if (!userIdToDelete) {
+            res.status(400)
+            throw new Error("Id nao existente")
+        }
+        await db("users").del().where({ id: idToDelete })
+        res.status(200).send("usuário excluido com sucesso")
+
+    } catch (error: any) {
+        console.log(error)
+        res.status(400).send(error.message)
+    }
+})
+
+
+app.get("/users", async (req: Request, res: Response) => { //refatorado e funcionando
+    try {
+        const result: Array<TUser> = await db("users")
         res.status(200).send(result)
     } catch (error: any) {
         console.log(error)
@@ -104,7 +128,7 @@ app.post("/create-table-products", async (req: Request, res: Response) => {
     }
 });
 
-app.post("/products", async (req: Request, res: Response) => {
+app.post("/products", async (req: Request, res: Response) => { //refatorado e funcionando
     try {
         const id = req.body.id
         const name = req.body.name
@@ -115,10 +139,14 @@ app.post("/products", async (req: Request, res: Response) => {
             res.status(400)
             throw new Error("Dados inválidos")
         }
-        await db.raw(`
-	        INSERT INTO products (id, name, price, description, image_url)
-	        VALUES ("${id}", "${name}", "${price}", "${description}", "${image_url}");
-        `)
+        const newProduct = {
+            id: id,
+            name: name,
+            price: price,
+            description: description,
+            image_url: image_url
+        }
+        await db("products").insert(newProduct)
         res.status(200).send({ message: "Cadastro de produto realizado com sucesso!" })
     }
     catch (error: any) {
@@ -126,7 +154,7 @@ app.post("/products", async (req: Request, res: Response) => {
     }
 });
 
-app.put("/products/:id", async (req: Request, res: Response) => {
+app.put("/products/:id", async (req: Request, res: Response) => { //não achei necessário refatorar
     try {
         const idToEdit = req.params.id
 
@@ -203,7 +231,7 @@ app.put("/products/:id", async (req: Request, res: Response) => {
     }
 })
 
-app.delete("/products/:id", async (req: Request, res: Response) => {
+app.delete("/products/:id", async (req: Request, res: Response) => { //refatorado e funcionando
     try {
         const idToDelete = req.params.id
         if (idToDelete[0] !== "p") {
@@ -237,8 +265,7 @@ app.get("/products", async (req: Request, res: Response) => {
             }
             res.status(200).send(result)
         } else {
-            const result: Array<TProducts> = await db.raw(`
-        SELECT * FROM products;`)
+            const result: Array<TProducts> = await db("products")
             res.status(200).send(result)
         }
     } catch (error: any) {
@@ -279,7 +306,7 @@ app.post("/purchases", async (req: Request, res: Response) => {
 	        INSERT INTO purchases (id, buyer, total_price, created_at)
 	        VALUES ("${id}", "${buyer}", "${total_price}", "${new Date().toISOString()}");
         `)
-        res.status(200).send({ message: "Cadastro de produto realizado com sucesso!" })
+        res.status(200).send({ message: "Cadastro de purchase realizado com sucesso!" })
     }
     catch (error: any) {
         res.status(400).send(error.message)
@@ -293,8 +320,8 @@ app.delete("/purchases/:id", async (req: Request, res: Response) => {
             res.status(400)
             throw new Error("O id deve cmeçar com 'prod'")
         }
-        const [productIdToDelete] = await db("purchases").where({ id: idToDelete })
-        if (!productIdToDelete) {
+        const [purchaseIdToDelete] = await db("purchases").where({ id: idToDelete })
+        if (!purchaseIdToDelete) {
             res.status(400)
             throw new Error("Id nao existente")
         }
@@ -309,9 +336,45 @@ app.delete("/purchases/:id", async (req: Request, res: Response) => {
 
 app.get("/purchases", async (req: Request, res: Response) => {
     try {
-        const result = await db.raw(`
-        SELECT * FROM purchases;`)
-        res.status(200).send(result)
+        const idToFind = req.query.id as string
+
+        if (typeof idToFind === "string" && idToFind.length > 0) {
+            const [result]: TProducts[] = await db.raw(
+                `SELECT purchases.id AS purchasesId,
+                purchases.buyer AS buyerID,
+                users.name AS buyerName,
+                users.email AS buyerEmail,
+                purchases.total_price AS totalPrice,
+                purchases.created_at AS createdAt
+
+                FROM purchases INNER JOIN users ON users.id = purchases.buyer
+                
+                WHERE purchases.id LIKE '%${idToFind}%';
+                `
+
+            );
+            if (!result) {
+                throw new Error("Nenhum purchase com esse id.")
+            }
+
+            const products = await db.raw(
+                `SELECT * FROM products
+
+                 INNER JOIN purchases_products ON purchases_products.product_id = product.id
+                 WHERE purchases_products.purchase_id = "${idToFind}"
+                 ;
+                 
+                `
+            )
+
+            const purchase = { ...result, products }
+
+            console.log(products)
+            res.status(200).send(purchase)
+        } else {
+            const result = await db("purchases")
+            res.status(200).send(result)
+        }
     } catch (error: any) {
         console.log(error)
         res.status(400).send(error.message)
@@ -323,8 +386,8 @@ app.post("/create-table-purchases_products", async (req: Request, res: Response)
         await db.raw(`
       CREATE TABLE
       purchases_products (
-        purchases_id TEXT NOT NULL,
-        products_id TEXT NOT NULL,
+        purchase_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         FOREIGN KEY (purchases_id) REFERENCES purchases(id) ON UPDATE CASCADE ON DELETE CASCADE,
         FOREIGN KEY (products_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -339,16 +402,16 @@ app.post("/create-table-purchases_products", async (req: Request, res: Response)
 
 app.post("/purchases_products", async (req: Request, res: Response) => {
     try {
-        const purchases_id = req.body.purchases_id
-        const products_id = req.body.products_id
+        const purchase_id = req.body.purchases_id
+        const product_id = req.body.products_id
         const quantity = req.body.quantity
-        if (!purchases_id || !products_id || isNaN(quantity)) {
+        if (!purchase_id || !product_id || isNaN(quantity)) {
             res.status(400)
             throw new Error("Dados inválidos")
         }
         await db.raw(`
 	        INSERT INTO purchases_products (purchases_id, products_id, quantity)
-	        VALUES ("${purchases_id}", "${products_id}", "${quantity}");
+	        VALUES ("${purchase_id}", "${product_id}", "${quantity}");
         `)
         res.status(200).send({ message: "Cadastro de produto realizado com sucesso!" })
     }
@@ -359,10 +422,11 @@ app.post("/purchases_products", async (req: Request, res: Response) => {
 
 
 
+
+
 app.get("/purchases_products", async (req: Request, res: Response) => {
     try {
-        const result = await db.raw(`
-        SELECT * FROM purchases_products;`)
+        const result = await db("purchases_products")
         res.status(200).send(result)
     } catch (error: any) {
         console.log(error)
