@@ -389,8 +389,8 @@ app.post("/create-table-purchases_products", async (req: Request, res: Response)
         purchase_id TEXT NOT NULL,
         product_id TEXT NOT NULL,
         quantity INTEGER NOT NULL,
-        FOREIGN KEY (purchases_id) REFERENCES purchases(id) ON UPDATE CASCADE ON DELETE CASCADE,
-        FOREIGN KEY (products_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+        FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
       );
       `);
         res.status(200).send("Tabela pruchases_products criada com sucesso!");
@@ -402,15 +402,15 @@ app.post("/create-table-purchases_products", async (req: Request, res: Response)
 
 app.post("/purchases_products", async (req: Request, res: Response) => {
     try {
-        const purchase_id = req.body.purchases_id
-        const product_id = req.body.products_id
+        const purchase_id = req.body.purchase_id
+        const product_id = req.body.product_id
         const quantity = req.body.quantity
         if (!purchase_id || !product_id || isNaN(quantity)) {
             res.status(400)
             throw new Error("Dados inválidos")
         }
         await db.raw(`
-	        INSERT INTO purchases_products (purchases_id, products_id, quantity)
+	        INSERT INTO purchases_products (purchase_id, product_id, quantity)
 	        VALUES ("${purchase_id}", "${product_id}", "${quantity}");
         `)
         res.status(200).send({ message: "Cadastro de produto realizado com sucesso!" })
@@ -419,10 +419,6 @@ app.post("/purchases_products", async (req: Request, res: Response) => {
         res.status(400).send(error.message)
     }
 });
-
-
-
-
 
 app.get("/purchases_products", async (req: Request, res: Response) => {
     try {
